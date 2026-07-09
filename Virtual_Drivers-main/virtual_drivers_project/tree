@@ -1,0 +1,18 @@
+virtual_drivers
+├── Makefile
+├── char_driver/
+│   ├── Makefile
+│   ├── simple_char.c
+│   ├── char_interface.c        # Interactive character device application
+│   └── test_char.c
+├── block_driver/
+│   ├── Makefile
+│   ├── simple_block.c
+│   ├── block_interface.c       # Interactive block device application
+│   └── test_block.c
+├── apps/
+│   ├── Makefile
+│   ├── char_app.c              # Advanced character application with menu
+│   ├── block_app.c             # Advanced block application with menu
+│   └── unified_app.c           # Unified application for both devices
+└── README.md

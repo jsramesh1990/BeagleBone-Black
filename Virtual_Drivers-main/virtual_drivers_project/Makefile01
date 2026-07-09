@@ -1,0 +1,32 @@
+KERNEL_DIR ?= /lib/modules/$(shell uname -r)/build
+
+all: char block
+
+char:
+	$(MAKE) -C char_driver
+
+block:
+	$(MAKE) -C block_driver
+
+clean:
+	$(MAKE) -C char_driver clean
+	$(MAKE) -C block_driver clean
+
+install: all
+	sudo insmod char_driver/simple_char.ko
+	sudo insmod block_driver/simple_block.ko
+	sudo mknod /dev/simple_char c 240 0 2>/dev/null || true
+	sudo mknod /dev/simple_block b 241 0 2>/dev/null || true
+	sudo chmod 666 /dev/simple_char /dev/simple_block
+
+uninstall:
+	sudo rmmod simple_char 2>/dev/null || true
+	sudo rmmod simple_block 2>/dev/null || true
+	sudo rm -f /dev/simple_char /dev/simple_block
+
+test:
+	sudo $(MAKE) install
+	$(MAKE) -C char_driver test
+	$(MAKE) -C block_driver test
+
+.PHONY: all char block clean install uninstall test
