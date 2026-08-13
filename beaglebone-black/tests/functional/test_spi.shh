@@ -1,0 +1,466 @@
+#!/bin/bash
+
+###############################################################################
+# BeagleBone Black - SPI Functional Test
+#
+# File:
+#   tests/functional/test_spi.sh
+#
+# Purpose:
+#   Verify Linux SPI subsystem, SPI controller/device detection and perform
+#   an optional SPI transfer test using spidev.
+#
+# Tests:
+#   1. SPI subsystem availability
+#   2. SPI controller detection
+#   3. SPI device detection
+#   4. SPI device-node verification
+#   5. SPI configuration verification
+#   6. Optional SPI transfer
+#   7. Kernel SPI messages
+#
+# Usage:
+#
+#   sudo ./tests/functional/test_spi.sh
+#   sudo ./tests/functional/test_spi.sh /dev/spidev1.0
+#   sudo ./tests/functional/test_spi.sh /dev/spidev1.0 1000000
+#   sudo ./tests/functional/test_spi.sh /dev/spidev1.0 1000000 8
+#
+# Arguments:
+#
+#   $1 = SPI device
+#   $2 = SPI speed in Hz
+#   $3 = SPI bits per word
+#
+# Example:
+#
+#   sudo ./tests/functional/test_spi.sh /dev/spidev1.0 1000000 8
+#
+# IMPORTANT:
+#   SPI transfer testing requires a valid SPI slave/device or an appropriate
+#   loopback connection.
+#
+#   Do not connect MOSI/MISO incorrectly or drive a device with unsupported
+#   SPI mode/speed.
+###############################################################################
+
+set -u
+
+###############################################################################
+# Configuration
+###############################################################################
+
+SPI_DEVICE="${1:-}"
+SPI_SPEED="${2:-1000000}"
+SPI_BITS="${3:-8}"
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
+
+LOG_DIR="${PROJECT_ROOT}/logs/functional"
+LOG_FILE="${LOG_DIR}/spi_${TIMESTAMP}.log"
+
+mkdir -p "${LOG_DIR}"
+
+###############################################################################
+# Colors
+###############################################################################
+
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+YELLOW="\033[1;33m"
+NC="\033[0m"
+
+###############################################################################
+# Counters
+###############################################################################
+
+PASS=0
+FAIL=0
+SKIP=0
+
+###############################################################################
+# Logging Functions
+###############################################################################
+
+log()
+{
+    echo "$1" | tee -a "${LOG_FILE}"
+}
+
+pass()
+{
+    echo -e "${GREEN}[PASS]${NC} $1" | tee -a "${LOG_FILE}"
+    PASS=$((PASS + 1))
+}
+
+fail()
+{
+    echo -e "${RED}[FAIL]${NC} $1" | tee -a "${LOG_FILE}"
+    FAIL=$((FAIL + 1))
+}
+
+skip()
+{
+    echo -e "${YELLOW}[SKIP]${NC} $1" | tee -a "${LOG_FILE}"
+    SKIP=$((SKIP + 1))
+}
+
+###############################################################################
+# Root Check
+###############################################################################
+
+if [ "${EUID}" -ne 0 ]; then
+
+    fail "This script must be run as root."
+
+    echo
+    echo "Use:"
+    echo "  sudo ./tests/functional/test_spi.sh"
+
+    exit 1
+fi
+
+###############################################################################
+# Header
+###############################################################################
+
+log "============================================================"
+log " BeagleBone Black - SPI Functional Test"
+log "============================================================"
+log "Date       : $(date)"
+log "Kernel     : $(uname -r)"
+log "Board      : $(tr '\0' '\n' < /proc/device-tree/model 2>/dev/null || echo Unknown)"
+log "SPI Device : ${SPI_DEVICE:-ALL}"
+log "Speed      : ${SPI_SPEED} Hz"
+log "Bits       : ${SPI_BITS}"
+log "Log File   : ${LOG_FILE}"
+log "============================================================"
+log ""
+
+###############################################################################
+# Test 1 - SPI Subsystem
+###############################################################################
+
+log "------------------------------------------------------------"
+log "TEST 1: SPI subsystem"
+log "------------------------------------------------------------"
+
+if [ -d /sys/class/spidev ] || [ -d /sys/bus/spi ]; then
+
+    pass "Linux SPI subsystem is available."
+
+else
+
+    fail "Linux SPI subsystem is not available."
+
+    exit 1
+
+fi
+
+###############################################################################
+# Test 2 - SPI Controller Detection
+###############################################################################
+
+log ""
+log "------------------------------------------------------------"
+log "TEST 2: SPI controller detection"
+log "------------------------------------------------------------"
+
+SPI_CONTROLLERS="$(find /sys/class/spi_master \
+    -maxdepth 1 \
+    -type l \
+    -name 'spi*' \
+    2>/dev/null || true)"
+
+if [ -n "${SPI_CONTROLLERS}" ]; then
+
+    SPI_COUNT="$(echo "${SPI_CONTROLLERS}" | wc -l)"
+
+    pass "Detected ${SPI_COUNT} SPI controller(s)."
+
+    log ""
+    log "Available SPI controllers:"
+
+    echo "${SPI_CONTROLLERS}" | tee -a "${LOG_FILE}"
+
+else
+
+    fail "No SPI controllers detected."
+
+    exit 1
+
+fi
+
+###############################################################################
+# Test 3 - SPI Device Detection
+###############################################################################
+
+log ""
+log "------------------------------------------------------------"
+log "TEST 3: SPI device detection"
+log "------------------------------------------------------------"
+
+SPI_DEVICES="$(find /sys/bus/spi/devices \
+    -maxdepth 1 \
+    -type l \
+    2>/dev/null || true)"
+
+if [ -n "${SPI_DEVICES}" ]; then
+
+    log "Registered SPI devices:"
+
+    echo "${SPI_DEVICES}" | tee -a "${LOG_FILE}"
+
+    pass "SPI device(s) detected."
+
+else
+
+    skip "No SPI slave devices registered."
+
+fi
+
+###############################################################################
+# Test 4 - spidev Device Nodes
+###############################################################################
+
+log ""
+log "------------------------------------------------------------"
+log "TEST 4: SPI device-node detection"
+log "------------------------------------------------------------"
+
+SPIDEV_NODES="$(find /dev \
+    -maxdepth 1 \
+    -name 'spidev*' \
+    -type c \
+    2>/dev/null || true)"
+
+if [ -n "${SPIDEV_NODES}" ]; then
+
+    log "Available spidev nodes:"
+
+    echo "${SPIDEV_NODES}" | tee -a "${LOG_FILE}"
+
+    SPIDEV_COUNT="$(echo "${SPIDEV_NODES}" | wc -l)"
+
+    pass "Detected ${SPIDEV_COUNT} spidev device node(s)."
+
+else
+
+    skip "No /dev/spidev* device nodes found."
+
+fi
+
+###############################################################################
+# Test 5 - Selected SPI Device
+###############################################################################
+
+log ""
+log "------------------------------------------------------------"
+log "TEST 5: Selected SPI device"
+log "------------------------------------------------------------"
+
+ACTIVE_SPI=0
+
+if [ -z "${SPI_DEVICE}" ]; then
+
+    skip "No SPI device supplied for active transfer test."
+
+    log ""
+    log "Available SPI devices:"
+
+    if [ -n "${SPIDEV_NODES}" ]; then
+        echo "${SPIDEV_NODES}" | tee -a "${LOG_FILE}"
+    else
+        log "No spidev devices available."
+    fi
+
+else
+
+    if [ ! -e "${SPI_DEVICE}" ]; then
+
+        fail "SPI device ${SPI_DEVICE} does not exist."
+
+    elif [ ! -c "${SPI_DEVICE}" ]; then
+
+        fail "${SPI_DEVICE} is not a character device."
+
+    else
+
+        pass "SPI device ${SPI_DEVICE} exists."
+
+        ACTIVE_SPI=1
+
+    fi
+
+fi
+
+###############################################################################
+# Test 6 - SPI Configuration
+###############################################################################
+
+if [ "${ACTIVE_SPI}" -eq 1 ]; then
+
+    log ""
+    log "------------------------------------------------------------"
+    log "TEST 6: SPI configuration"
+    log "------------------------------------------------------------"
+
+    if command -v spidev_test >/dev/null 2>&1; then
+
+        log "spidev_test is available."
+
+        log "Requested SPI speed : ${SPI_SPEED} Hz"
+        log "Requested SPI bits  : ${SPI_BITS}"
+
+        pass "SPI test utility is available."
+
+    else
+
+        skip "spidev_test is not installed."
+
+        log ""
+        log "Install/build spidev_test for SPI transfer testing."
+
+    fi
+
+else
+
+    skip "SPI configuration test skipped because no SPI device was selected."
+
+fi
+
+###############################################################################
+# Test 7 - SPI Transfer
+###############################################################################
+
+log ""
+log "------------------------------------------------------------"
+log "TEST 7: SPI transfer"
+log "------------------------------------------------------------"
+
+if [ "${ACTIVE_SPI}" -eq 1 ]; then
+
+    if command -v spidev_test >/dev/null 2>&1; then
+
+        log "Starting SPI transfer..."
+
+        log ""
+        log "SPI transfer output:"
+
+        if spidev_test \
+            -D "${SPI_DEVICE}" \
+            -s "${SPI_SPEED}" \
+            -b "${SPI_BITS}" \
+            2>&1 | tee -a "${LOG_FILE}"; then
+
+            pass "SPI transfer command completed."
+
+        else
+
+            fail "SPI transfer failed."
+
+        fi
+
+    else
+
+        skip "SPI transfer skipped because spidev_test is unavailable."
+
+    fi
+
+else
+
+    skip "SPI transfer skipped because no SPI device was selected."
+
+fi
+
+###############################################################################
+# Test 8 - SPI Sysfs Information
+###############################################################################
+
+log ""
+log "------------------------------------------------------------"
+log "TEST 8: SPI sysfs information"
+log "------------------------------------------------------------"
+
+if [ -n "${SPI_DEVICES}" ]; then
+
+    for DEVICE_PATH in ${SPI_DEVICES}; do
+
+        log ""
+        log "SPI device: ${DEVICE_PATH}"
+
+        if [ -f "${DEVICE_PATH}/modalias" ]; then
+            log "  modalias: $(cat "${DEVICE_PATH}/modalias" 2>/dev/null)"
+        fi
+
+        if [ -f "${DEVICE_PATH}/uevent" ]; then
+            log "  uevent:"
+            cat "${DEVICE_PATH}/uevent" 2>/dev/null | tee -a "${LOG_FILE}"
+        fi
+
+    done
+
+    pass "SPI sysfs information inspected."
+
+else
+
+    skip "No SPI devices available for sysfs inspection."
+
+fi
+
+###############################################################################
+# Test 9 - Kernel SPI Messages
+###############################################################################
+
+log ""
+log "------------------------------------------------------------"
+log "TEST 9: SPI kernel messages"
+log "------------------------------------------------------------"
+
+log "Recent SPI-related kernel messages:"
+
+dmesg 2>/dev/null | \
+    grep -iE "spi|spidev|omap2_mcspi|mcspi" | \
+    tail -50 | \
+    tee -a "${LOG_FILE}" || true
+
+pass "SPI kernel-log inspection completed."
+
+###############################################################################
+# Summary
+###############################################################################
+
+log ""
+log "============================================================"
+log " SPI TEST SUMMARY"
+log "============================================================"
+
+echo -e "${GREEN}PASS : ${PASS}${NC}" | tee -a "${LOG_FILE}"
+echo -e "${RED}FAIL : ${FAIL}${NC}" | tee -a "${LOG_FILE}"
+echo -e "${YELLOW}SKIP : ${SKIP}${NC}" | tee -a "${LOG_FILE}"
+
+log ""
+log "Test log:"
+log "${LOG_FILE}"
+
+###############################################################################
+# Final Result
+###############################################################################
+
+if [ "${FAIL}" -eq 0 ]; then
+
+    log ""
+    log "RESULT: PASS"
+
+    exit 0
+
+else
+
+    log ""
+    log "RESULT: FAIL"
+
+    exit 1
+
+fi
