@@ -1,0 +1,29 @@
+/*
+ * BeagleBone Black UART Device Tree Overlay
+ *
+ * Purpose:
+ *   Enable a UART controller for serial communication testing.
+ *
+ * Platform:
+ *   BeagleBone Black
+ *   TI AM335x
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+/ {
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+
+	/*
+	 * Enable UART1
+	 */
+	fragment@0 {
+		target = <&uart1>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};

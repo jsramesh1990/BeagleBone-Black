@@ -1,0 +1,11 @@
+/*
+ * BeagleBone Black ADC configuration
+ *
+ * AM335x ADC/TSC controller configuration.
+ *
+ * The ADC is normally exposed through the Linux IIO subsystem.
+ */
+
+&tscadc {
+	status = "okay";
+};

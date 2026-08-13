@@ -1,0 +1,52 @@
+/*
+ * BeagleBone Black GPIO Device Tree Overlay
+ *
+ * Purpose:
+ *   Configure a GPIO pin for GPIO testing.
+ *
+ * Platform:
+ *   BeagleBone Black
+ *   TI AM335x
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+/ {
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+
+	/*
+	 * GPIO pin configuration.
+	 *
+	 * The exact GPIO and header pin must be verified against
+	 * the target BeagleBone Black hardware configuration.
+	 */
+
+	fragment@0 {
+		target = <&am33xx_pinmux>;
+
+		__overlay__ {
+
+			bbb_gpio_pins: pinmux_bbb_gpio_pins {
+				pinctrl-single,pins = <
+					/*
+					 * GPIO pin configuration goes here.
+					 *
+					 * Replace this value with the correct
+					 * AM335x pinmux value for the selected
+					 * physical header pin.
+					 */
+				>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&gpio1>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};

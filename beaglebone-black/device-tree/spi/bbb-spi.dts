@@ -1,0 +1,19 @@
+/*
+ * BeagleBone Black SPI Device Tree
+ *
+ * Platform : BeagleBone Black
+ * SoC      : TI AM335x
+ *
+ * Purpose:
+ *   SPI controller and SPI device configuration.
+ */
+
+/dts-v1/;
+
+/include/ "am335x-boneblack.dts"
+/include/ "bbb-spi.dtsi"
+
+/ {
+	model = "TI AM335x BeagleBone Black - SPI Test";
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+};

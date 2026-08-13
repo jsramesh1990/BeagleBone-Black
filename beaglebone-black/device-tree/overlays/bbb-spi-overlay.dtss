@@ -1,0 +1,29 @@
+/*
+ * BeagleBone Black SPI Device Tree Overlay
+ *
+ * Purpose:
+ *   Enable SPI controller for SPI device testing.
+ *
+ * Platform:
+ *   BeagleBone Black
+ *   TI AM335x
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+/ {
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+
+	/*
+	 * Enable SPI0
+	 */
+	fragment@0 {
+		target = <&spi0>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+};

@@ -1,0 +1,31 @@
+/*
+ * BeagleBone Black CAN configuration
+ *
+ * AM335x contains two DCAN controllers:
+ *
+ *     DCAN0 -> can0
+ *     DCAN1 -> can1
+ *
+ * The exact pinmux configuration depends on the pins selected
+ * for CAN communication.
+ */
+
+/*
+ * CAN0
+ *
+ * Enable the first CAN controller.
+ */
+
+&dcan0 {
+	status = "okay";
+};
+
+/*
+ * CAN1
+ *
+ * Enable the second CAN controller.
+ */
+
+&dcan1 {
+	status = "okay";
+};

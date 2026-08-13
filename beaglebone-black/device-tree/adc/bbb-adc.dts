@@ -1,0 +1,20 @@
+/*
+ * BeagleBone Black ADC Device Tree Test
+ *
+ * Platform : BeagleBone Black
+ * SoC      : TI AM335x
+ *
+ * Purpose:
+ *   Enable the ADC/TSC hardware and provide a test Device Tree
+ *   configuration for Linux IIO ADC functionality.
+ */
+
+/dts-v1/;
+
+/include/ "am335x-boneblack.dts"
+/include/ "bbb-adc.dtsi"
+
+/ {
+	model = "TI AM335x BeagleBone Black - ADC Test";
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+};

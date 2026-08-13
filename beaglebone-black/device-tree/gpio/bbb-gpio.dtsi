@@ -1,0 +1,35 @@
+/*
+ * BeagleBone Black GPIO configuration
+ *
+ * GPIO examples:
+ *
+ *   GPIO output -> LED
+ *   GPIO input  -> Push Button
+ *
+ * The exact GPIO number and pinmux must match the hardware
+ * connection used on the BeagleBone Black.
+ */
+
+/ {
+	gpio_test {
+		compatible = "bbb,gpio-test";
+
+		/*
+		 * GPIO output example.
+		 *
+		 * GPIO1_28 is used here as an example.
+		 * Verify the physical header pin and pinmux before use.
+		 */
+		led-gpios = <&gpio1 28 0>;
+
+		/*
+		 * GPIO input example.
+		 *
+		 * GPIO1_16 is used here as an example.
+		 * Verify the physical header pin and pinmux before use.
+		 */
+		button-gpios = <&gpio1 16 0>;
+
+		status = "okay";
+	};
+};

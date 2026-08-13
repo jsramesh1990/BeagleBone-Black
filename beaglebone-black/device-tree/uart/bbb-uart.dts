@@ -1,0 +1,20 @@
+/*
+ * BeagleBone Black UART Device Tree
+ *
+ * Platform : BeagleBone Black
+ * SoC      : TI AM335x
+ *
+ * Purpose:
+ *   UART controller and UART peripheral configuration
+ *   for Linux driver development and testing.
+ */
+
+/dts-v1/;
+
+/include/ "am335x-boneblack.dts"
+/include/ "bbb-uart.dtsi"
+
+/ {
+	model = "TI AM335x BeagleBone Black - UART Test";
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+};

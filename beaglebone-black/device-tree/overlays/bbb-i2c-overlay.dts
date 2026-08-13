@@ -1,0 +1,36 @@
+/*
+ * BeagleBone Black I2C Device Tree Overlay
+ *
+ * Purpose:
+ *   Enable an I2C controller and demonstrate an I2C client device.
+ *
+ * Platform:
+ *   BeagleBone Black
+ *   TI AM335x
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+/ {
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+
+	/*
+	 * I2C controller
+	 */
+	fragment@0 {
+		target = <&i2c2>;
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	/*
+	 * I2C client-device example.
+	 *
+	 * Do NOT use this node unless the actual hardware connected
+	 * to the bus matches the compatible string and address.
+	 */
+};

@@ -1,0 +1,19 @@
+/*
+ * BeagleBone Black CAN Device Tree Test
+ *
+ * Platform : BeagleBone Black
+ * SoC      : TI AM335x
+ *
+ * Purpose:
+ *   Enable the DCAN0 and DCAN1 controllers for Linux SocketCAN.
+ */
+
+/dts-v1/;
+
+/include/ "am335x-boneblack.dts"
+/include/ "bbb-can.dtsi"
+
+/ {
+	model = "TI AM335x BeagleBone Black - CAN Test";
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+};

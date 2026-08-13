@@ -1,0 +1,36 @@
+/*
+ * BeagleBone Black PWM configuration
+ *
+ * AM335x PWM functionality is provided through the
+ * eHRPWM / ECAP / EHRPWM subsystem depending on the
+ * selected peripheral.
+ *
+ * Exact controller names and pinmux configuration must
+ * match the kernel Device Tree being used.
+ */
+
+/*
+ * Example eHRPWM controller.
+ *
+ * Verify the exact node names in your kernel Device Tree
+ * before using additional PWM instances.
+ */
+
+&epwm0 {
+	status = "okay";
+};
+
+/*
+ * Additional PWM controllers can be enabled after verifying
+ * their node names in the target kernel Device Tree.
+ *
+ * Example:
+ *
+ * &epwm1 {
+ *     status = "okay";
+ * };
+ *
+ * &epwm2 {
+ *     status = "okay";
+ * };
+ */

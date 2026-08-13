@@ -1,0 +1,19 @@
+/*
+ * BeagleBone Black I2C Device Tree Test
+ *
+ * Platform : BeagleBone Black
+ * SoC      : TI AM335x
+ *
+ * Purpose:
+ *   Enable and test I2C controllers on the BeagleBone Black.
+ */
+
+/dts-v1/;
+
+/include/ "am335x-boneblack.dts"
+/include/ "bbb-i2c.dtsi"
+
+/ {
+	model = "TI AM335x BeagleBone Black - I2C Test";
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+};

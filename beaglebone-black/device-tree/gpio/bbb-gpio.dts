@@ -1,0 +1,19 @@
+/*
+ * BeagleBone Black GPIO Device Tree Test
+ *
+ * Platform : BeagleBone Black
+ * SoC      : TI AM335x
+ *
+ * Purpose:
+ *   Configure GPIOs for LED output and push-button input testing.
+ */
+
+/dts-v1/;
+
+/include/ "am335x-boneblack.dts"
+/include/ "bbb-gpio.dtsi"
+
+/ {
+	model = "TI AM335x BeagleBone Black - GPIO Test";
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+};

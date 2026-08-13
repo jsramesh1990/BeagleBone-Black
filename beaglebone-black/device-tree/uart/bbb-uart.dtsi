@@ -1,0 +1,43 @@
+/*
+ * BeagleBone Black UART Configuration
+ *
+ * TI AM335x provides multiple UART controllers.
+ *
+ * The exact UART labels and pinctrl configuration must be
+ * verified against the Linux kernel Device Tree version
+ * being used.
+ */
+
+/*
+ * UART1 example
+ *
+ * Enable only after verifying that UART1 is available and
+ * the selected pins are correctly configured.
+ */
+
+&uart1 {
+	status = "okay";
+};
+
+/*
+ * Additional UART controllers can be enabled after verifying
+ * their corresponding Device Tree nodes and pinmux configuration.
+ *
+ * Example:
+ *
+ * &uart2 {
+ *     status = "okay";
+ * };
+ *
+ * &uart3 {
+ *     status = "okay";
+ * };
+ *
+ * &uart4 {
+ *     status = "okay";
+ * };
+ *
+ * &uart5 {
+ *     status = "okay";
+ * };
+ */

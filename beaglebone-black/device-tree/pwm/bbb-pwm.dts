@@ -1,0 +1,19 @@
+/*
+ * BeagleBone Black PWM Device Tree Test
+ *
+ * Platform : BeagleBone Black
+ * SoC      : TI AM335x
+ *
+ * Purpose:
+ *   Enable PWM hardware for testing and driver development.
+ */
+
+/dts-v1/;
+
+/include/ "am335x-boneblack.dts"
+/include/ "bbb-pwm.dtsi"
+
+/ {
+	model = "TI AM335x BeagleBone Black - PWM Test";
+	compatible = "ti,am335x-bone-black", "ti,am335x";
+};

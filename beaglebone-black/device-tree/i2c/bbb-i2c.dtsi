@@ -1,0 +1,36 @@
+/*
+ * BeagleBone Black I2C configuration
+ *
+ * AM335x provides multiple I2C controllers.
+ *
+ * The exact controller availability and pinmux depend on the
+ * kernel Device Tree and BeagleBone Black configuration.
+ */
+
+/*
+ * I2C0
+ *
+ * Commonly used by the board for on-board devices.
+ * Do not modify this controller blindly if your base Device Tree
+ * already contains devices attached to it.
+ */
+
+&i2c0 {
+	status = "okay";
+};
+
+/*
+ * I2C1
+ */
+
+&i2c1 {
+	status = "okay";
+};
+
+/*
+ * I2C2
+ */
+
+&i2c2 {
+	status = "okay";
+};

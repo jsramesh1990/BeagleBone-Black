@@ -1,0 +1,161 @@
+beaglebone-black-linux-device-drivers/
+│
+├── README.md
+├── LICENSE
+├── CONTRIBUTING.md
+├── CHANGELOG.md
+│
+├── docs/
+│   ├── 01_architecture.md
+│   ├── 02_hardware_setup.md
+│   ├── 03_linux_driver_model.md
+│   ├── 04_device_tree.md
+│   ├── 05_kernel_build.md
+│   ├── 06_debugging.md
+│   └── 07_testing.md
+│
+├── hardware/
+│   ├── pinout/
+│   ├── schematics/
+│   ├── wiring/
+│   └── sensors/
+│
+├── device-tree/
+│   ├── gpio/
+│   ├── i2c/
+│   ├── spi/
+│   ├── uart/
+│   ├── pwm/
+│   ├── adc/
+│   ├── can/
+│   └── overlays/
+│
+├── drivers/
+│
+│   ├── 01_char_driver/
+│   │   ├── char_driver.c
+│   │   ├── Makefile
+│   │   └── README.md
+│   │
+│   ├── 02_gpio/
+│   │   ├── gpio_led.c
+│   │   ├── gpio_button.c
+│   │   ├── Makefile
+│   │   └── README.md
+│   │
+│   ├── 03_interrupt/
+│   │   ├── gpio_irq.c
+│   │   ├── Makefile
+│   │   └── README.md
+│   │
+│   ├── 04_i2c/
+│   │   ├── i2c_sensor.c
+│   │   ├── i2c_eeprom.c
+│   │   ├── Makefile
+│   │   └── README.md
+│   │
+│   ├── 05_spi/
+│   │   ├── spi_sensor.c
+│   │   ├── spi_display.c
+│   │   ├── Makefile
+│   │   └── README.md
+│   │
+│   ├── 06_uart/
+│   │   ├── uart_driver.c
+│   │   ├── Makefile
+│   │   └── README.md
+│   │
+│   ├── 07_adc/
+│   │   ├── adc_driver.c
+│   │   ├── Makefile
+│   │   └── README.md
+│   │
+│   ├── 08_pwm/
+│   │   ├── pwm_driver.c
+│   │   ├── Makefile
+│   │   └── README.md
+│   │
+│   ├── 09_can/
+│   │   ├── can_demo.c
+│   │   ├── can_filter.c
+│   │   └── README.md
+│   │
+│   ├── 10_rtc/
+│   │   ├── rtc_driver.c
+│   │   └── README.md
+│   │
+│   ├── 11_input/
+│   │   ├── button_input.c
+│   │   └── README.md
+│   │
+│   ├── 12_led/
+│   │   ├── led_driver.c
+│   │   └── README.md
+│   │
+│   ├── 13_watchdog/
+│   │   ├── watchdog_demo.c
+│   │   └── README.md
+│   │
+│   ├── 14_dma/
+│   │   ├── dma_driver.c
+│   │   └── README.md
+│   │
+│   ├── 15_usb/
+│   │   ├── usb_driver.c
+│   │   └── README.md
+│   │
+│   ├── 16_ethernet/
+│   │   ├── ethernet_demo.c
+│   │   └── README.md
+│   │
+│   ├── 17_audio/
+│   │   ├── alsa_driver.c
+│   │   └── README.md
+│   │
+│   ├── 18_sysfs/
+│   │   ├── sysfs_driver.c
+│   │   └── README.md
+│   │
+│   ├── 19_procfs/
+│   │   ├── proc_driver.c
+│   │   └── README.md
+│   │
+│   └── 20_debugfs/
+│       ├── debugfs_driver.c
+│       └── README.md
+│
+├── user-space/
+│   ├── gpio_test/
+│   ├── i2c_test/
+│   ├── spi_test/
+│   ├── uart_test/
+│   ├── adc_test/
+│   ├── pwm_test/
+│   ├── can_test/
+│   ├── rtc_test/
+│   ├── interrupt_test/
+│   └── device_manager/
+│
+├── scripts/
+│   ├── build.sh
+│   ├── install.sh
+│   ├── unload.sh
+│   ├── test_all.sh
+│   └── collect_logs.sh
+│
+├── tests/
+│   ├── functional/
+│   ├── stress/
+│   ├── interrupt/
+│   ├── performance/
+│   └── regression/
+│
+├── kernel/
+│   ├── config/
+│   └── patches/
+│
+└── tools/
+    ├── driver_status.sh
+    ├── gpio_monitor.sh
+    ├── irq_monitor.sh
+    └── device_scan.sh

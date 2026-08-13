@@ -1,0 +1,36 @@
+/*
+ * BeagleBone Black SPI Configuration
+ *
+ * TI AM335x SPI0 configuration.
+ *
+ * NOTE:
+ * Exact pinmux and controller labels must be verified against
+ * the kernel Device Tree version being used.
+ */
+
+/*
+ * SPI0 pin configuration.
+ *
+ * The exact pinctrl node depends on the kernel Device Tree.
+ * Verify the existing BeagleBone Black DTS before enabling
+ * additional pinmux settings.
+ */
+
+&spi0 {
+	status = "okay";
+
+	/*
+	 * Example SPI device.
+	 *
+	 * Do not enable this node until an actual SPI device is
+	 * connected to the selected chip-select.
+	 *
+	 * Example:
+	 *
+	 * spi_device@0 {
+	 *     compatible = "vendor,device";
+	 *     reg = <0>;
+	 *     spi-max-frequency = <1000000>;
+	 * };
+	 */
+};
