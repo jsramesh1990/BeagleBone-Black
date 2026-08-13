@@ -1,0 +1,96 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: BeagleBone Black Driver Project <embedded@example.com>
+Date: Thu, 13 Aug 2026 10:00:00 +0530
+Subject: [PATCH] bbb: enable peripheral support
+
+Enable the kernel subsystems required for the BeagleBone Black
+all-peripheral device driver development project.
+
+The configuration enables support for:
+
+- GPIO
+- I2C
+- SPI
+- UART
+- PWM
+- CAN
+- IIO/ADC
+- Device Tree
+- Kernel modules
+- Kernel debugging
+
+This patch provides the base kernel configuration required before
+developing and testing individual peripheral drivers.
+
+Signed-off-by: BeagleBone Black Driver Project <embedded@example.com>
+---
+ kernel/configs/bbb_driver_defconfig | 48 +++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/kernel/configs/bbb_driver_defconfig b/kernel/configs/bbb_driver_defconfig
+new file mode 100644
+index 000000000000..111111111111
+--- /dev/null
++++ b/kernel/configs/bbb_driver_defconfig
+@@ -0,0 +1,48 @@
++#
++# BeagleBone Black Device Driver Project
++#
++
++# Architecture
++CONFIG_ARM=y
++CONFIG_ARCH_MULTI_V7=y
++CONFIG_ARCH_OMAP2PLUS=y
++CONFIG_SOC_AM33XX=y
++
++# Device Tree
++CONFIG_OF=y
++CONFIG_OF_FLATTREE=y
++
++# Device Management
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++
++# GPIO
++CONFIG_GPIOLIB=y
++
++# I2C
++CONFIG_I2C=y
++CONFIG_I2C_CHARDEV=y
++
++# SPI
++CONFIG_SPI=y
++CONFIG_SPI_MASTER=y
++CONFIG_SPI_SPIDEV=y
++
++# UART
++CONFIG_TTY=y
++CONFIG_SERIAL_8250=y
++CONFIG_SERIAL_8250_CONSOLE=y
++
++# PWM
++CONFIG_PWM=y
++
++# CAN
++CONFIG_CAN=y
++CONFIG_CAN_RAW=y
++CONFIG_CAN_DEV=y
++
++# ADC / Industrial I/O
++CONFIG_IIO=y
++
++# Networking / SocketCAN
++CONFIG_NET=y
++CONFIG_NETDEVICES=y
++CONFIG_INET=y
++
++# Kernel Modules
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++
++# Debugging
++CONFIG_DEBUG_FS=y
++CONFIG_DYNAMIC_DEBUG=y
++CONFIG_DEBUG_KERNEL=y
+-- 
+2.43.0

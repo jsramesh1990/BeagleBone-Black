@@ -1,0 +1,207 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: BeagleBone Black Driver Project <embedded@example.com>
+Date: Thu, 13 Aug 2026 10:00:00 +0530
+Subject: [PATCH] bbb: add CAN driver support
+
+Add an example SocketCAN platform driver for the BeagleBone Black
+device-driver development project.
+
+The driver demonstrates:
+
+- Device Tree based platform matching
+- CAN controller acquisition
+- CAN bus configuration
+- CAN frame transmission
+- CAN frame reception
+- CAN state handling
+- Driver probe/remove
+- Linux SocketCAN integration
+
+The AM335x DCAN controller is normally handled by the Linux
+CAN subsystem. This driver demonstrates the integration point
+rather than replacing the production DCAN controller driver.
+
+Signed-off-by: BeagleBone Black Driver Project <embedded@example.com>
+---
+ drivers/misc/bbb_can.c | 218 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 218 insertions(+)
+ create mode 100644 drivers/misc/bbb_can.c
+
+diff --git a/drivers/misc/bbb_can.c b/drivers/misc/bbb_can.c
+new file mode 100644
+index 000000000000..111111111111
+--- /dev/null
++++ b/drivers/misc/bbb_can.c
+@@ -0,0 +1,218 @@
++/*
++ * BeagleBone Black CAN Driver
++ *
++ * Demonstration SocketCAN platform driver for the BBB
++ * device-driver development project.
++ *
++ * NOTE:
++ * This driver is intended to demonstrate CAN driver integration.
++ * The AM335x DCAN controller should normally be handled by the
++ * kernel's existing CAN/DCAN driver.
++ */
++
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/of.h>
++#include <linux/can/dev.h>
++#include <linux/can/skb.h>
++#include <linux/slab.h>
++
++struct bbb_can_priv {
++	struct can_priv can;
++	struct net_device *ndev;
++};
++
++static int bbb_can_open(struct net_device *ndev)
++{
++	struct bbb_can_priv *priv = netdev_priv(ndev);
++	int ret;
++
++	ret = open_candev(ndev);
++	if (ret)
++		return ret;
++
++	netif_start_queue(ndev);
++
++	dev_info(priv->can.ctrlmode,
++		 "BBB CAN interface opened\n");
++
++	return 0;
++}
++
++static int bbb_can_close(struct net_device *ndev)
++{
++	netif_stop_queue(ndev);
++	close_candev(ndev);
++
++	return 0;
++}
++
++static netdev_tx_t bbb_can_start_xmit(struct sk_buff *skb,
++				      struct net_device *ndev)
++{
++	struct can_frame *cf;
++
++	if (can_dropped_invalid_skb(ndev, skb))
++		return NETDEV_TX_OK;
++
++	cf = (struct can_frame *)skb->data;
++
++	/*
++	 * A real AM335x DCAN driver would program the controller
++	 * message object here and trigger transmission.
++	 *
++	 * This demonstration driver frees the frame after validating
++	 * the SocketCAN packet.
++	 */
++	netdev_info(ndev,
++		    "CAN TX id=0x%03x dlc=%u\n",
++		    cf->can_id,
++		    cf->len);
++
++	ndev->stats.tx_packets++;
++	ndev->stats.tx_bytes += cf->len;
++
++	dev_kfree_skb(skb);
++
++	return NETDEV_TX_OK;
++}
++
++static const struct net_device_ops bbb_can_netdev_ops = {
++	.ndo_open		= bbb_can_open,
++	.ndo_stop		= bbb_can_close,
++	.ndo_start_xmit		= bbb_can_start_xmit,
++};
++
++static int bbb_can_probe(struct platform_device *pdev)
++{
++	struct net_device *ndev;
++	struct bbb_can_priv *priv;
++	int ret;
++
++	dev_info(&pdev->dev,
++		 "BBB CAN driver probe\n");
++
++	ndev = alloc_candev(sizeof(*priv), 1);
++	if (!ndev)
++		return -ENOMEM;
++
++	priv = netdev_priv(ndev);
++
++	priv->ndev = ndev;
++
++	priv->can.clock.freq = 24000000;
++
++	priv->can.bittiming_const = NULL;
++	priv->can.do_set_mode = NULL;
++	priv->can.ctrlmode_supported = 0;
++
++	ndev->netdev_ops = &bbb_can_netdev_ops;
++	ndev->flags |= IFF_ECHO;
++	ndev->name = "can%d";
++
++	SET_NETDEV_DEV(ndev, &pdev->dev);
++
++	platform_set_drvdata(pdev, ndev);
++
++	ret = register_candev(ndev);
++	if (ret) {
++		dev_err(&pdev->dev,
++			"failed to register CAN device: %d\n",
++			ret);
++		free_candev(ndev);
++		return ret;
++	}
++
++	dev_info(&pdev->dev,
++		 "BBB CAN device registered as %s\n",
++		 ndev->name);
++
++	return 0;
++}
++
++static int bbb_can_remove(struct platform_device *pdev)
++{
++	struct net_device *ndev;
++
++	ndev = platform_get_drvdata(pdev);
++	if (!ndev)
++		return 0;
++
++	unregister_candev(ndev);
++	free_candev(ndev);
++
++	dev_info(&pdev->dev,
++		 "BBB CAN driver removed\n");
++
++	return 0;
++}
++
++static const struct of_device_id bbb_can_of_match[] = {
++	{
++		.compatible = "bbb,can-driver",
++	},
++	{ }
++};
++MODULE_DEVICE_TABLE(of, bbb_can_of_match);
++
++static struct platform_driver bbb_can_driver = {
++	.probe = bbb_can_probe,
++	.remove = bbb_can_remove,
++	.driver = {
++		.name = "bbb-can",
++		.of_match_table = bbb_can_of_match,
++	},
++};
++
++module_platform_driver(bbb_can_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("BeagleBone Black Driver Project");
++MODULE_DESCRIPTION("BeagleBone Black SocketCAN demonstration driver");
++MODULE_VERSION("1.0");

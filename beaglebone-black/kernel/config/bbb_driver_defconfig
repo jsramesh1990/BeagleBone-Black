@@ -1,0 +1,111 @@
+#
+# BeagleBone Black - Device Driver Project Configuration
+#
+
+#
+# Architecture
+#
+CONFIG_ARM=y
+CONFIG_ARCH_MULTI_V7=y
+CONFIG_ARCH_OMAP2PLUS=y
+CONFIG_SOC_AM33XX=y
+
+#
+# Device Tree
+#
+CONFIG_OF=y
+CONFIG_OF_FLATTREE=y
+CONFIG_OF_EARLY_FLATTREE=y
+
+#
+# Device Drivers
+#
+CONFIG_DEVTMPFS=y
+CONFIG_DEVTMPFS_MOUNT=y
+
+#
+# GPIO
+#
+CONFIG_GPIOLIB=y
+CONFIG_GPIO_SYSFS=y
+
+#
+# I2C
+#
+CONFIG_I2C=y
+CONFIG_I2C_CHARDEV=y
+
+#
+# SPI
+#
+CONFIG_SPI=y
+CONFIG_SPI_MASTER=y
+CONFIG_SPI_SPIDEV=y
+
+#
+# Serial / UART
+#
+CONFIG_TTY=y
+CONFIG_SERIAL_8250=y
+CONFIG_SERIAL_8250_CONSOLE=y
+
+#
+# PWM
+#
+CONFIG_PWM=y
+
+#
+# CAN / SocketCAN
+#
+CONFIG_CAN=y
+CONFIG_CAN_RAW=y
+CONFIG_CAN_DEV=y
+
+#
+# Industrial I/O / ADC
+#
+CONFIG_IIO=y
+
+#
+# Character Device Support
+#
+CONFIG_CHARDEV=y
+
+#
+# Debugging
+#
+CONFIG_DEBUG_FS=y
+CONFIG_DYNAMIC_DEBUG=y
+
+#
+# Kernel Debugging
+#
+CONFIG_DEBUG_KERNEL=y
+
+#
+# Proc / Sysfs
+#
+CONFIG_PROC_FS=y
+CONFIG_SYSFS=y
+
+#
+# Networking - Required for SocketCAN
+#
+CONFIG_NET=y
+CONFIG_NETDEVICES=y
+
+#
+# Networking Support
+#
+CONFIG_INET=y
+
+#
+# Memory Management
+#
+CONFIG_MMU=y
+
+#
+# Kernel Modules
+#
+CONFIG_MODULES=y
+CONFIG_MODULE_UNLOAD=y

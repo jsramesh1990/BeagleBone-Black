@@ -1,0 +1,150 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: BeagleBone Black Driver Project <embedded@example.com>
+Date: Thu, 13 Aug 2026 10:00:00 +0530
+Subject: [PATCH] bbb: add ADC driver support
+
+Add an example ADC consumer driver for the BeagleBone Black
+device-driver development project.
+
+The driver demonstrates:
+
+- Device Tree based ADC channel configuration
+- Linux Industrial I/O (IIO) framework
+- IIO channel acquisition
+- Raw ADC value reading
+- ADC value reporting through kernel logs
+- Platform driver probe/remove
+- Device-managed resource handling
+
+The AM335x ADC/TSC hardware should normally be handled by the
+existing Linux IIO ADC driver. This driver demonstrates how a
+kernel component can consume an ADC channel through the IIO
+framework.
+
+Signed-off-by: BeagleBone Black Driver Project <embedded@example.com>
+---
+ drivers/misc/bbb_adc.c | 164 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 164 insertions(+)
+ create mode 100644 drivers/misc/bbb_adc.c
+
+diff --git a/drivers/misc/bbb_adc.c b/drivers/misc/bbb_adc.c
+new file mode 100644
+index 000000000000..111111111111
+--- /dev/null
++++ b/drivers/misc/bbb_adc.c
+@@ -0,0 +1,164 @@
++/*
++ * BeagleBone Black ADC Driver
++ *
++ * Demonstration IIO ADC consumer driver for the BBB
++ * device-driver development project.
++ */
++
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/of.h>
++#include <linux/iio/consumer.h>
++#include <linux/slab.h>
++
++struct bbb_adc_data {
++	struct iio_channel *channel;
++};
++
++static int bbb_adc_read(struct device *dev,
++			struct iio_channel *channel)
++{
++	int value;
++	int ret;
++
++	/*
++	 * Read the raw ADC sample through the IIO framework.
++	 */
++	ret = iio_read_channel_raw(channel, &value);
++	if (ret < 0) {
++		dev_err(dev,
++			"ADC raw read failed: %d\n",
++			ret);
++		return ret;
++	}
++
++	dev_info(dev,
++		 "ADC raw value: %d\n",
++		 value);
++
++	return 0;
++}
++
++static int bbb_adc_probe(struct platform_device *pdev)
++{
++	struct bbb_adc_data *data;
++	int ret;
++
++	dev_info(&pdev->dev,
++		 "BBB ADC driver probe\n");
++
++	data = devm_kzalloc(&pdev->dev,
++			    sizeof(*data),
++			    GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	/*
++	 * "adc" refers to the ADC channel supplied through
++	 * the Device Tree.
++	 */
++	data->channel = devm_iio_channel_get(&pdev->dev,
++					     "adc");
++	if (IS_ERR(data->channel)) {
++		ret = PTR_ERR(data->channel);
++
++		dev_err(&pdev->dev,
++			"failed to get ADC channel: %d\n",
++			ret);
++
++		return ret;
++	}
++
++	platform_set_drvdata(pdev, data);
++
++	ret = bbb_adc_read(&pdev->dev,
++			   data->channel);
++	if (ret)
++		return ret;
++
++	dev_info(&pdev->dev,
++		 "BBB ADC initialized successfully\n");
++
++	return 0;
++}
++
++static int bbb_adc_remove(struct platform_device *pdev)
++{
++	dev_info(&pdev->dev,
++		 "BBB ADC driver removed\n");
++
++	return 0;
++}
++
++static const struct of_device_id bbb_adc_of_match[] = {
++	{
++		.compatible = "bbb,adc-driver",
++	},
++	{ }
++};
++MODULE_DEVICE_TABLE(of, bbb_adc_of_match);
++
++static struct platform_driver bbb_adc_driver = {
++	.probe = bbb_adc_probe,
++	.remove = bbb_adc_remove,
++	.driver = {
++		.name = "bbb-adc",
++		.of_match_table = bbb_adc_of_match,
++	},
++};
++
++module_platform_driver(bbb_adc_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("BeagleBone Black Driver Project");
++MODULE_DESCRIPTION("BeagleBone Black ADC IIO consumer driver");
++MODULE_VERSION("1.0");

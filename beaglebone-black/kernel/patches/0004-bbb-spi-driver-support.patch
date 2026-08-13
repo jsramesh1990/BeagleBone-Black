@@ -1,0 +1,231 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: BeagleBone Black Driver Project <embedded@example.com>
+Date: Thu, 13 Aug 2026 10:00:00 +0530
+Subject: [PATCH] bbb: add SPI driver support
+
+Add an example SPI client driver for the BeagleBone Black
+device-driver development project.
+
+The driver demonstrates:
+
+- Device Tree based SPI device matching
+- SPI device probing
+- SPI bus configuration
+- SPI transfer
+- SPI register read
+- SPI register write
+- Driver remove handling
+- Kernel logging for debugging
+
+The driver is intended as a foundation for integrating
+SPI sensors, ADCs, displays, Flash and other SPI peripherals.
+
+Signed-off-by: BeagleBone Black Driver Project <embedded@example.com>
+---
+ drivers/misc/bbb_spi.c | 210 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 210 insertions(+)
+ create mode 100644 drivers/misc/bbb_spi.c
+
+diff --git a/drivers/misc/bbb_spi.c b/drivers/misc/bbb_spi.c
+new file mode 100644
+index 000000000000..111111111111
+--- /dev/null
++++ b/drivers/misc/bbb_spi.c
+@@ -0,0 +1,210 @@
++/*
++ * BeagleBone Black SPI Client Driver
++ *
++ * Demonstration SPI driver for the BBB
++ * device-driver development project.
++ */
++
++#include <linux/module.h>
++#include <linux/spi/spi.h>
++#include <linux/of.h>
++#include <linux/slab.h>
++
++#define BBB_SPI_REG_ID		0x00
++#define BBB_SPI_REG_CONFIG	0x01
++
++struct bbb_spi_data {
++	struct spi_device *spi;
++};
++
++static int bbb_spi_transfer(struct spi_device *spi,
++			    const u8 *tx,
++			    u8 *rx,
++			    size_t len)
++{
++	struct spi_transfer transfer = {
++		.tx_buf = tx,
++		.rx_buf = rx,
++		.len = len,
++	};
++	struct spi_message message;
++
++	spi_message_init(&message);
++	spi_message_add_tail(&transfer, &message);
++
++	return spi_sync(spi, &message);
++}
++
++static int bbb_spi_read_reg(struct spi_device *spi,
++			    u8 reg,
++			    u8 *value)
++{
++	u8 tx[2];
++	u8 rx[2];
++	int ret;
++
++	/*
++	 * Example SPI protocol:
++	 *
++	 * Bit 7 = Read
++	 * Bits 6:0 = Register
++	 */
++	tx[0] = 0x80 | (reg & 0x7f);
++	tx[1] = 0x00;
++
++	memset(rx, 0, sizeof(rx));
++
++	ret = bbb_spi_transfer(spi, tx, rx, sizeof(tx));
++	if (ret) {
++		dev_err(&spi->dev,
++			"SPI register read failed: reg=0x%02x ret=%d\n",
++			reg, ret);
++		return ret;
++	}
++
++	*value = rx[1];
++
++	return 0;
++}
++
++static int bbb_spi_write_reg(struct spi_device *spi,
++			     u8 reg,
++			     u8 value)
++{
++	u8 tx[2];
++	int ret;
++
++	/*
++	 * Example SPI protocol:
++	 *
++	 * Bit 7 = Write
++	 * Bits 6:0 = Register
++	 */
++	tx[0] = reg & 0x7f;
++	tx[1] = value;
++
++	ret = bbb_spi_transfer(spi, tx, NULL, sizeof(tx));
++	if (ret) {
++		dev_err(&spi->dev,
++			"SPI register write failed: reg=0x%02x ret=%d\n",
++			reg, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int bbb_spi_probe(struct spi_device *spi)
++{
++	struct bbb_spi_data *data;
++	u8 chip_id;
++	int ret;
++
++	dev_info(&spi->dev,
++		 "BBB SPI driver probe\n");
++
++	data = devm_kzalloc(&spi->dev, sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	data->spi = spi;
++	spi_set_drvdata(spi, data);
++
++	/*
++	 * Example SPI configuration.
++	 * These values must match the actual SPI peripheral.
++	 */
++	spi->mode = SPI_MODE_0;
++	spi->bits_per_word = 8;
++	spi->max_speed_hz = 1000000;
++
++	ret = spi_setup(spi);
++	if (ret) {
++		dev_err(&spi->dev,
++			"SPI setup failed: %d\n", ret);
++		return ret;
++	}
++
++	dev_info(&spi->dev,
++		 "SPI configured: mode=%u speed=%uHz bits=%u\n",
++		 spi->mode,
++		 spi->max_speed_hz,
++		 spi->bits_per_word);
++
++	ret = bbb_spi_read_reg(spi,
++			       BBB_SPI_REG_ID,
++			       &chip_id);
++	if (ret) {
++		dev_err(&spi->dev,
++			"failed to read SPI device ID\n");
++		return ret;
++	}
++
++	dev_info(&spi->dev,
++		 "SPI device ID: 0x%02x\n",
++		 chip_id);
++
++	ret = bbb_spi_write_reg(spi,
++				BBB_SPI_REG_CONFIG,
++				0x01);
++	if (ret) {
++		dev_err(&spi->dev,
++			"failed to configure SPI device\n");
++		return ret;
++	}
++
++	dev_info(&spi->dev,
++		 "BBB SPI device initialized successfully\n");
++
++	return 0;
++}
++
++static void bbb_spi_remove(struct spi_device *spi)
++{
++	dev_info(&spi->dev,
++		 "BBB SPI driver removed\n");
++}
++
++static const struct of_device_id bbb_spi_of_match[] = {
++	{
++		.compatible = "bbb,spi-device",
++	},
++	{ }
++};
++MODULE_DEVICE_TABLE(of, bbb_spi_of_match);
++
++static const struct spi_device_id bbb_spi_id[] = {
++	{ "bbb-spi-device", 0 },
++	{ }
++};
++MODULE_DEVICE_TABLE(spi, bbb_spi_id);
++
++static struct spi_driver bbb_spi_driver = {
++	.driver = {
++		.name = "bbb-spi",
++		.of_match_table = bbb_spi_of_match,
++	},
++	.probe = bbb_spi_probe,
++	.remove = bbb_spi_remove,
++	.id_table = bbb_spi_id,
++};
++
++module_spi_driver(bbb_spi_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("BeagleBone Black Driver Project");
++MODULE_DESCRIPTION("BeagleBone Black SPI client driver");
++MODULE_VERSION("1.0");

@@ -1,0 +1,172 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: BeagleBone Black Driver Project <embedded@example.com>
+Date: Thu, 13 Aug 2026 10:00:00 +0530
+Subject: [PATCH] bbb: add PWM driver support
+
+Add an example PWM platform driver for the BeagleBone Black
+device-driver development project.
+
+The driver demonstrates:
+
+- Device Tree based PWM device matching
+- Linux PWM framework
+- PWM controller acquisition
+- Period configuration
+- Duty-cycle configuration
+- PWM enable/disable
+- Driver probe/remove
+- Kernel logging for debugging
+
+The driver uses the Linux PWM framework rather than directly
+programming PWM hardware registers.
+
+Signed-off-by: BeagleBone Black Driver Project <embedded@example.com>
+---
+ drivers/misc/bbb_pwm.c | 169 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 169 insertions(+)
+ create mode 100644 drivers/misc/bbb_pwm.c
+
+diff --git a/drivers/misc/bbb_pwm.c b/drivers/misc/bbb_pwm.c
+new file mode 100644
+index 000000000000..111111111111
+--- /dev/null
++++ b/drivers/misc/bbb_pwm.c
+@@ -0,0 +1,169 @@
++/*
++ * BeagleBone Black PWM Driver
++ *
++ * Demonstration PWM consumer driver for the BBB
++ * device-driver development project.
++ */
++
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/of.h>
++#include <linux/pwm.h>
++#include <linux/slab.h>
++
++/*
++ * Example PWM configuration:
++ *
++ * Period    = 20 ms
++ * Duty      = 50%
++ *
++ * The values are represented in nanoseconds.
++ */
++#define BBB_PWM_PERIOD_NS	20000000ULL
++#define BBB_PWM_DUTY_NS		10000000ULL
++
++struct bbb_pwm_data {
++	struct pwm_device *pwm;
++};
++
++static int bbb_pwm_configure(struct device *dev,
++			     struct pwm_device *pwm)
++{
++	struct pwm_state state;
++	int ret;
++
++	pwm_init_state(pwm, &state);
++
++	state.period = BBB_PWM_PERIOD_NS;
++	state.duty_cycle = BBB_PWM_DUTY_NS;
++	state.polarity = PWM_POLARITY_NORMAL;
++	state.enabled = true;
++
++	ret = pwm_apply_might_sleep(pwm, &state);
++	if (ret) {
++		dev_err(dev,
++			"failed to configure PWM: %d\n",
++			ret);
++		return ret;
++	}
++
++	dev_info(dev,
++		 "PWM configured: period=%llu ns duty=%llu ns\n",
++		 state.period,
++		 state.duty_cycle);
++
++	return 0;
++}
++
++static int bbb_pwm_probe(struct platform_device *pdev)
++{
++	struct bbb_pwm_data *data;
++	int ret;
++
++	dev_info(&pdev->dev,
++		 "BBB PWM driver probe\n");
++
++	data = devm_kzalloc(&pdev->dev,
++			    sizeof(*data),
++			    GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	data->pwm = devm_pwm_get(&pdev->dev, NULL);
++	if (IS_ERR(data->pwm)) {
++		ret = PTR_ERR(data->pwm);
++
++		dev_err(&pdev->dev,
++			"failed to get PWM: %d\n",
++			ret);
++
++		return ret;
++	}
++
++	platform_set_drvdata(pdev, data);
++
++	ret = bbb_pwm_configure(&pdev->dev,
++				data->pwm);
++	if (ret)
++		return ret;
++
++	dev_info(&pdev->dev,
++		 "BBB PWM initialized successfully\n");
++
++	return 0;
++}
++
++static int bbb_pwm_remove(struct platform_device *pdev)
++{
++	struct bbb_pwm_data *data;
++	struct pwm_state state;
++
++	data = platform_get_drvdata(pdev);
++	if (!data || !data->pwm)
++		return 0;
++
++	pwm_init_state(data->pwm, &state);
++	state.enabled = false;
++
++	pwm_apply_might_sleep(data->pwm, &state);
++
++	dev_info(&pdev->dev,
++		 "BBB PWM disabled and driver removed\n");
++
++	return 0;
++}
++
++static const struct of_device_id bbb_pwm_of_match[] = {
++	{
++		.compatible = "bbb,pwm-driver",
++	},
++	{ }
++};
++MODULE_DEVICE_TABLE(of, bbb_pwm_of_match);
++
++static struct platform_driver bbb_pwm_driver = {
++	.probe = bbb_pwm_probe,
++	.remove = bbb_pwm_remove,
++	.driver = {
++		.name = "bbb-pwm",
++		.of_match_table = bbb_pwm_of_match,
++	},
++};
++
++module_platform_driver(bbb_pwm_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("BeagleBone Black Driver Project");
++MODULE_DESCRIPTION("BeagleBone Black PWM consumer driver");
++MODULE_VERSION("1.0");

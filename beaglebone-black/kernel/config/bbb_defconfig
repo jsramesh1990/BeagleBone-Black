@@ -1,0 +1,14 @@
+cd beaglebone-black/kernel/config
+
+mkdir -p fragments
+
+touch README.md
+touch bbb_driver_defconfig
+
+touch fragments/adc.cfg
+touch fragments/can.cfg
+touch fragments/gpio.cfg
+touch fragments/i2c.cfg
+touch fragments/pwm.cfg
+touch fragments/spi.cfg
+touch fragments/uart.cfg

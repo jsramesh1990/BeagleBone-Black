@@ -1,0 +1,170 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: BeagleBone Black Driver Project <embedded@example.com>
+Date: Thu, 13 Aug 2026 10:00:00 +0530
+Subject: [PATCH] bbb: add I2C driver support
+
+Add an example I2C client driver for the BeagleBone Black
+device-driver development project.
+
+The driver demonstrates:
+
+- Device Tree based I2C device matching
+- I2C client registration
+- I2C device probing
+- I2C register read
+- I2C register write
+- Driver remove handling
+- Kernel logging for debugging
+
+The driver is intended for a simple register-based I2C peripheral
+and provides a foundation for integrating sensors, EEPROMs and
+other I2C devices.
+
+Signed-off-by: BeagleBone Black Driver Project <embedded@example.com>
+---
+ drivers/misc/bbb_i2c.c | 183 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 183 insertions(+)
+ create mode 100644 drivers/misc/bbb_i2c.c
+
+diff --git a/drivers/misc/bbb_i2c.c b/drivers/misc/bbb_i2c.c
+new file mode 100644
+index 000000000000..111111111111
+--- /dev/null
++++ b/drivers/misc/bbb_i2c.c
+@@ -0,0 +1,183 @@
++/*
++ * BeagleBone Black I2C Client Driver
++ *
++ * Demonstration I2C driver for the BBB
++ * device-driver development project.
++ */
++
++#include <linux/module.h>
++#include <linux/i2c.h>
++#include <linux/of.h>
++#include <linux/slab.h>
++
++#define BBB_I2C_REG_ID		0x00
++#define BBB_I2C_REG_CONFIG	0x01
++
++struct bbb_i2c_data {
++	struct i2c_client *client;
++};
++
++static int bbb_i2c_read_reg(struct i2c_client *client,
++			    u8 reg, u8 *value)
++{
++	int ret;
++
++	ret = i2c_smbus_read_byte_data(client, reg);
++	if (ret < 0) {
++		dev_err(&client->dev,
++			"I2C read failed: reg=0x%02x ret=%d\n",
++			reg, ret);
++		return ret;
++	}
++
++	*value = ret & 0xff;
++
++	return 0;
++}
++
++static int bbb_i2c_write_reg(struct i2c_client *client,
++			     u8 reg, u8 value)
++{
++	int ret;
++
++	ret = i2c_smbus_write_byte_data(client, reg, value);
++	if (ret < 0) {
++		dev_err(&client->dev,
++			"I2C write failed: reg=0x%02x ret=%d\n",
++			reg, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int bbb_i2c_probe(struct i2c_client *client)
++{
++	struct bbb_i2c_data *data;
++	u8 chip_id;
++	int ret;
++
++	dev_info(&client->dev,
++		 "BBB I2C driver probe, address=0x%02x\n",
++		 client->addr);
++
++	data = devm_kzalloc(&client->dev, sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	data->client = client;
++	i2c_set_clientdata(client, data);
++
++	if (!i2c_check_functionality(client->adapter,
++				     I2C_FUNC_SMBUS_BYTE_DATA)) {
++		dev_err(&client->dev,
++			"I2C adapter does not support SMBus byte operations\n");
++		return -EOPNOTSUPP;
++	}
++
++	ret = bbb_i2c_read_reg(client, BBB_I2C_REG_ID, &chip_id);
++	if (ret) {
++		dev_err(&client->dev,
++			"failed to read device ID\n");
++		return ret;
++	}
++
++	dev_info(&client->dev,
++		 "I2C device ID: 0x%02x\n", chip_id);
++
++	ret = bbb_i2c_write_reg(client, BBB_I2C_REG_CONFIG, 0x01);
++	if (ret) {
++		dev_err(&client->dev,
++			"failed to configure I2C device\n");
++		return ret;
++	}
++
++	dev_info(&client->dev,
++		 "BBB I2C device initialized successfully\n");
++
++	return 0;
++}
++
++static void bbb_i2c_remove(struct i2c_client *client)
++{
++	dev_info(&client->dev,
++		 "BBB I2C driver removed\n");
++}
++
++static const struct of_device_id bbb_i2c_of_match[] = {
++	{
++		.compatible = "bbb,i2c-device",
++	},
++	{ }
++};
++MODULE_DEVICE_TABLE(of, bbb_i2c_of_match);
++
++static const struct i2c_device_id bbb_i2c_id[] = {
++	{ "bbb-i2c-device", 0 },
++	{ }
++};
++MODULE_DEVICE_TABLE(i2c, bbb_i2c_id);
++
++static struct i2c_driver bbb_i2c_driver = {
++	.driver = {
++		.name = "bbb-i2c",
++		.of_match_table = bbb_i2c_of_match,
++	},
++	.probe = bbb_i2c_probe,
++	.remove = bbb_i2c_remove,
++	.id_table = bbb_i2c_id,
++};
++
++module_i2c_driver(bbb_i2c_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("BeagleBone Black Driver Project");
++MODULE_DESCRIPTION("BeagleBone Black I2C client driver");
++MODULE_VERSION("1.0");
